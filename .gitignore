@@ -1,0 +1,12 @@
+_build/
+*.cm*
+*.o
+*.a
+*.so
+*.cmi
+*.cmo
+*.cmx
+*.js.map
+src/main.ml
+static/game.js
+.DS_Store

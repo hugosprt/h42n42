@@ -1,0 +1,13 @@
+<ocsigen>
+  <server>
+    <port>8080</port>
+    <charset>utf-8</charset>
+    <extension findlib-package="ocsigenserver.ext.staticmod" />
+
+    <host defaulthostname="localhost">
+      <site path="/">
+        <static dir="/app/static" />
+      </site>
+    </host>
+  </server>
+</ocsigen>
