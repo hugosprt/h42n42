@@ -22,7 +22,7 @@ Interactive web simulation where Creets survive a toxic environment and a contag
 - `src/dune`: dune build description
 - `static/index.html`: page entrypoint
 - `static/style.css`: game styles
-- `static/game.js`: generated JavaScript bundle (created by `make all`)
+- `static/game.js`: generated JavaScript bundle (created by `make all` during image build or local build)
 - `h42n42.conf.in`: Ocsigen server configuration
 - `Makefile`: build automation (`all`, `clean`, `fclean`, `re`)
 - `Dockerfile`: container build instructions
@@ -85,4 +85,4 @@ No bonus-specific features are claimed in this version.
 
 - `src/main.eliom` is the main authored source file used by the Makefile pipeline.
 - `make all` generates `static/game.js`, which is served by Ocsigen.
-# h42n42
+- `docker compose up --build` builds the JavaScript inside the image and starts the server without writing generated files into the host workspace.

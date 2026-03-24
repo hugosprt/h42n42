@@ -4,6 +4,3 @@ services:
       context: .
     ports:
       - "8080:8080"
-    command: sh -lc "opam exec -- make all && opam exec -- ocsigenserver -c /app/h42n42.conf.in -v"
-    volumes:
-      - .:/app
