@@ -17,17 +17,20 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
 RUN opam init --reinit -y --disable-sandboxing
 RUN opam update
 
+RUN opam pin add -y js_of_ocaml 5.8.0
+RUN opam pin add -y js_of_ocaml-compiler 5.8.0
+RUN opam pin add -y js_of_ocaml-lwt 5.8.0
+RUN opam pin add -y js_of_ocaml-tyxml 5.8.0
+
 RUN opam install -y \
     dune \
     lwt \
     tyxml \
-    js_of_ocaml \
-    js_of_ocaml-lwt \
-    js_of_ocaml-tyxml
-
-RUN opam install -y \
-    "eliom>=10.0.0" \
-    "ocsigenserver>=5.0.0"
+    js_of_ocaml=5.8.0 \
+    js_of_ocaml-lwt=5.8.0 \
+    js_of_ocaml-tyxml=5.8.0 \
+    eliom \
+    ocsigenserver
 
 COPY --chown=opam:opam . /app
 
