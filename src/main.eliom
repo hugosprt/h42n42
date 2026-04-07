@@ -1,3 +1,54 @@
+open%server Eliom_content.Html.D
+
+module%server H42N42_app =
+  Eliom_registration.App
+    (struct
+      let application_name = "h42n42"
+      let global_data_path = None
+    end)
+
+let%server main_service =
+  H42N42_app.create
+    ~path:(Eliom_service.Path [])
+    ~meth:(Eliom_service.Get Eliom_parameter.unit)
+    (fun () () ->
+      Lwt.return
+        (html
+           (head
+              (title (txt "H42N42"))
+              [
+                css_link
+                  ~uri:(make_uri ~service:(Eliom_service.static_dir ()) ["style.css"])
+                  ();
+              ])
+           (body
+              [
+                div ~a:[a_id "h42n42"]
+                  [
+                    div ~a:[a_id "hud"]
+                      [
+                        div ~a:[a_class ["chip"]]
+                          [txt "Healthy "; span ~a:[a_id "healthy-count"] [txt "0"]];
+                        div ~a:[a_class ["chip"]]
+                          [txt "Sick "; span ~a:[a_id "sick-count"] [txt "0"]];
+                        div ~a:[a_class ["chip"]]
+                          [txt "Berserk "; span ~a:[a_id "berserk-count"] [txt "0"]];
+                        div ~a:[a_class ["chip"]]
+                          [txt "Mean "; span ~a:[a_id "mean-count"] [txt "0"]];
+                        div ~a:[a_class ["chip"]]
+                          [txt "Alive "; span ~a:[a_id "total-count"] [txt "0"]];
+                      ];
+                    div ~a:[a_id "game-area"]
+                      [
+                        div ~a:[a_id "river"] [txt "TOXIC RIVER"];
+                        div ~a:[a_id "hospital"] [txt "HOSPITAL"];
+                        div ~a:[a_id "game-over"] [txt "GAME OVER"];
+                      ];
+                  ];
+              ])))
+
+[%%client.start]
+
 open Js_of_ocaml
 open Js_of_ocaml_lwt
 open Lwt.Infix
@@ -46,15 +97,12 @@ let next_id = ref 0
 let speed_factor = ref 1.0
 let game_over = ref false
 
-let now () = (new%js Js.date_now)##getTime /. 1000.
+let now () = Js.date_now () /. 1000.
 
 let get_by_id id =
   Js.Opt.get
     (Dom_html.document##getElementById (Js.string id))
     (fun () -> failwith ("Missing DOM id: " ^ id))
-
-let body () =
-  Dom_html.document##.body
 
 let random_direction () =
   let angle = Random.float (2. *. Float.pi) in
@@ -129,7 +177,6 @@ let speed_multiplier = function
   | Mean -> 0.85
 
 let update_creet_style c =
-  ignore c.id;
   let left = c.x -. c.radius in
   let top = c.y -. c.radius in
   let size = 2. *. c.radius in
@@ -151,7 +198,8 @@ let update_creet_style c =
          (Js.string "none")
          Js.undefined)
 
-let is_in_hospital c = c.y +. c.radius >= world_height -. hospital_height
+let is_in_hospital c =
+  c.y +. c.radius >= world_height -. hospital_height
 
 let heal c =
   match c.state with
@@ -184,7 +232,7 @@ let become_berserk c =
             loop ()
           else Lwt.return_unit
         in
-        loop ()))
+        loop ()) )
 
 let become_mean c =
   if c.alive && c.state = Sick then (
@@ -207,8 +255,7 @@ let alive_healthy_creets () =
   List.filter (fun c -> c.alive && c.state = Healthy) !creets
 
 let nearest_healthy target =
-  let healthy = alive_healthy_creets () in
-  match healthy with
+  match alive_healthy_creets () with
   | [] -> None
   | first :: rest ->
       let best, _ =
@@ -236,7 +283,8 @@ let trigger_game_over () =
     game_over := true;
     (get_dom_ref "game_over_overlay" game_over_overlay)##.className := Js.string "visible")
 
-let can_drag c = c.alive && c.state <> Berserk && c.state <> Mean
+let can_drag c =
+  c.alive && c.state <> Berserk && c.state <> Mean
 
 let mouse_to_game_coords (ev : Dom_html.mouseEvent Js.t) =
   let rect = (get_dom_ref "game_area" game_area)##getBoundingClientRect in
@@ -269,7 +317,10 @@ let spawn_creet ?x ?y ?(state = Healthy) () =
   in
   let dir_x, dir_y = random_direction () in
   let base_speed = 90. +. Random.float 50. in
-  let node = Tyxml_js.To_dom.of_div (H.div ~a:[ H.a_class [ "creet" ] ] []) in
+  let node =
+    Tyxml_js.To_dom.of_div
+      (H.div ~a:[H.a_class ["creet"]] [])
+  in
   Dom.appendChild (get_dom_ref "game_area" game_area) (node :> Dom.node Js.t);
   let c =
     {
@@ -377,45 +428,11 @@ let spawn_creet ?x ?y ?(state = Healthy) () =
   Lwt.async drag_sequence;
   c
 
-let setup_ui () =
-  let page =
-    H.div ~a:[ H.a_id "h42n42" ]
-      [
-        H.div ~a:[ H.a_id "hud" ]
-          [
-            H.div ~a:[ H.a_class [ "chip" ] ]
-              [ H.txt "Healthy "; H.span ~a:[ H.a_id "healthy-count" ] [ H.txt "0" ] ];
-            H.div ~a:[ H.a_class [ "chip" ] ]
-              [ H.txt "Sick "; H.span ~a:[ H.a_id "sick-count" ] [ H.txt "0" ] ];
-            H.div ~a:[ H.a_class [ "chip" ] ]
-              [ H.txt "Berserk "; H.span ~a:[ H.a_id "berserk-count" ] [ H.txt "0" ] ];
-            H.div ~a:[ H.a_class [ "chip" ] ]
-              [ H.txt "Mean "; H.span ~a:[ H.a_id "mean-count" ] [ H.txt "0" ] ];
-            H.div ~a:[ H.a_class [ "chip" ] ]
-              [ H.txt "Alive "; H.span ~a:[ H.a_id "total-count" ] [ H.txt "0" ] ];
-          ];
-        H.div ~a:[ H.a_id "game-area" ]
-          [
-            H.div ~a:[ H.a_id "river" ] [ H.txt "TOXIC RIVER" ];
-            H.div ~a:[ H.a_id "hospital" ] [ H.txt "HOSPITAL" ];
-            H.div ~a:[ H.a_id "game-over" ] [ H.txt "GAME OVER" ];
-          ];
-      ]
-  in
-  let node = Tyxml_js.To_dom.of_div page in
-  Dom.appendChild (body ()) (node :> Dom.node Js.t);
-  game_area := Some (get_by_id "game-area");
-  game_over_overlay := Some (get_by_id "game-over");
-  healthy_counter := Some (get_by_id "healthy-count");
-  sick_counter := Some (get_by_id "sick-count");
-  berserk_counter := Some (get_by_id "berserk-count");
-  mean_counter := Some (get_by_id "mean-count");
-  total_counter := Some (get_by_id "total-count")
-
 let has_healthy_alive () =
   List.exists (fun c -> c.alive && c.state = Healthy) !creets
 
-let contagious c = c.alive && (c.state = Sick || c.state = Berserk || c.state = Mean)
+let contagious c =
+  c.alive && (c.state = Sick || c.state = Berserk || c.state = Mean)
 
 let contamination_loop () =
   let rec loop () =
@@ -427,8 +444,11 @@ let contamination_loop () =
             List.iter
               (fun target ->
                 if target.alive && target.state = Healthy && not target.dragging then
-                  let touching = distance carrier target <= carrier.radius +. target.radius in
-                  if touching && Random.float 1. < infection_probability_per_contact then infect target)
+                  let touching =
+                    distance carrier target <= carrier.radius +. target.radius
+                  in
+                  if touching && Random.float 1. < infection_probability_per_contact then
+                    infect target)
               alive)
         alive;
       refresh_hud ();
@@ -439,27 +459,36 @@ let contamination_loop () =
 
 let spawn_loop () =
   let rec loop () =
-    if not !game_over && has_healthy_alive () then ignore (spawn_creet ());
+    if not !game_over && has_healthy_alive () then
+      ignore (spawn_creet ());
     Lwt_js.sleep spawn_interval >>= loop
   in
   loop ()
 
 let difficulty_loop () =
   let rec loop () =
-    if not !game_over then speed_factor := !speed_factor *. 1.03;
+    if not !game_over then
+      speed_factor := !speed_factor *. 1.03;
     Lwt_js.sleep 10. >>= loop
   in
   loop ()
 
-let () =
+let start () =
   Random.self_init ();
-  Dom_html.window##.onload :=
-    Dom_html.handler (fun _ ->
-        setup_ui ();
-        for _ = 1 to initial_population do
-          ignore (spawn_creet ())
-        done;
-        Lwt.async contamination_loop;
-        Lwt.async spawn_loop;
-        Lwt.async difficulty_loop;
-        Js._false)
+  game_area := Some (get_by_id "game-area");
+  game_over_overlay := Some (get_by_id "game-over");
+  healthy_counter := Some (get_by_id "healthy-count");
+  sick_counter := Some (get_by_id "sick-count");
+  berserk_counter := Some (get_by_id "berserk-count");
+  mean_counter := Some (get_by_id "mean-count");
+  total_counter := Some (get_by_id "total-count");
+
+  for _ = 1 to initial_population do
+    ignore (spawn_creet ())
+  done;
+
+  Lwt.async contamination_loop;
+  Lwt.async spawn_loop;
+  Lwt.async difficulty_loop
+
+let () = start ()
