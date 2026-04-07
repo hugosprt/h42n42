@@ -1,26 +1,43 @@
-NAME := h42n42
-SRC_ELIOM := src/main.eliom
-SRC_ML := src/main.ml
-JS_BUILD := _build/default/src/main.bc.js
-JS_OUT := static/game.js
+APP_NAME := h42n42
+SRC := src/main.eliom
 
-all: $(JS_OUT)
+SERVER_DIR := _server
+CLIENT_DIR := _client
 
-$(SRC_ML): $(SRC_ELIOM)
-	cp $(SRC_ELIOM) $(SRC_ML)
+TYPE_INFO := $(SERVER_DIR)/main.type_mli
+SERVER_MOD := $(SERVER_DIR)/main.cmo
+CLIENT_JS := static/$(APP_NAME).js
 
-$(JS_BUILD): $(SRC_ML) src/dune dune-project
-	dune build $(JS_BUILD)
+COMMON_PACKAGES := \
+	-thread \
+	-package js_of_ocaml \
+	-package js_of_ocaml-lwt \
+	-package js_of_ocaml-tyxml \
+	-package lwt \
+	-package tyxml
 
-$(JS_OUT): $(JS_BUILD)
-	cp $(JS_BUILD) $(JS_OUT)
+SERVER_PACKAGES := -package eliom.server
+CLIENT_PACKAGES := -package eliom.client
+
+all: $(SERVER_MOD) $(CLIENT_JS)
+
+$(TYPE_INFO): $(SRC)
+	mkdir -p $(SERVER_DIR) $(CLIENT_DIR) static
+	eliomc $(SERVER_PACKAGES) $(COMMON_PACKAGES) -infer $<
+
+$(SERVER_MOD): $(SRC) $(TYPE_INFO)
+	mkdir -p $(SERVER_DIR) $(CLIENT_DIR) static
+	eliomc $(SERVER_PACKAGES) $(COMMON_PACKAGES) -c $<
+
+$(CLIENT_JS): $(SRC) $(TYPE_INFO)
+	mkdir -p $(SERVER_DIR) $(CLIENT_DIR) static
+	js_of_eliom $(CLIENT_PACKAGES) $(COMMON_PACKAGES) -o $@ $<
 
 clean:
-	- dune clean
-	rm -f $(SRC_ML)
+	rm -rf $(SERVER_DIR) $(CLIENT_DIR)
 
 fclean: clean
-	rm -f $(JS_OUT)
+	rm -f $(CLIENT_JS)
 
 re: fclean all
 
