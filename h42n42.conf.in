@@ -3,10 +3,14 @@
     <port>8080</port>
     <charset>utf-8</charset>
     <commandpipe>/tmp/ocsigenserver_command</commandpipe>
+
     <extension findlib-package="ocsigenserver.ext.staticmod" />
+    <extension findlib-package="eliom.server" />
 
     <host defaulthostname="localhost">
       <site path="/">
+        <eliommodule module="/app/_server/main.cmo" />
+        <eliom />
         <static dir="/app/static" />
       </site>
     </host>
