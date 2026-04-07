@@ -2,6 +2,7 @@
   <server>
     <port>8080</port>
     <charset>utf-8</charset>
+    <commandpipe>/tmp/ocsigenserver_command</commandpipe>
     <extension findlib-package="ocsigenserver.ext.staticmod" />
 
     <host defaulthostname="localhost">

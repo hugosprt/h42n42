@@ -53,11 +53,8 @@ RUN eval $(opam env) && \
 # Copy project files
 COPY --chown=root:root . .
 
-# Make scripts executable
-
-
 # Expose port
 EXPOSE 8080
-
+RUN opam exec -- make all
 # Set up environment and run dev script
 CMD ["opam", "exec", "--", "ocsigenserver", "-c", "/app/h42n42.conf.in", "-v"]
