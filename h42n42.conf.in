@@ -4,6 +4,9 @@
     <charset>utf-8</charset>
     <commandpipe>/tmp/ocsigenserver_command</commandpipe>
 
+    <extension findlib-package="ocsipersist-sqlite-config">
+      <database file="/app/data/ocsidb"/>
+    </extension>
     <extension findlib-package="ocsigenserver.ext.staticmod" />
     <extension findlib-package="eliom.server" />
 
