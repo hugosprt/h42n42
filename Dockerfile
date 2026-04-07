@@ -1,60 +1,47 @@
 FROM ubuntu:24.04
 
-# Set the working directory
 WORKDIR /app
 
-# Set environment variables to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 ENV OPAMYES=1
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    libev-dev \
+    ca-certificates \
+    curl \
+    git \
+    m4 \
     pkg-config \
+    bubblewrap \
+    libev-dev \
     libgmp-dev \
     libssl-dev \
     zlib1g-dev \
-    rlwrap \
-    bubblewrap \
-    m4 \
     libsqlite3-dev \
     libgdbm-dev \
-    curl \
-    expect \
-    unzip \
-    git \
-    rsync \
     && rm -rf /var/lib/apt/lists/*
 
-# Install OPAM non-interactively
-RUN printf "\n" | bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"
+RUN printf '\n' | sh -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"
 
-# Initialize OPAM
 RUN opam init --yes --disable-sandboxing
-
-# Create OCaml switch
 RUN opam switch create ocreet-4.14.1 4.14.1
 
-# Activate OPAM environment and install packages
-RUN eval $(opam env) && \
+RUN eval $(opam env --switch=ocreet-4.14.1) && \
     opam install -y \
-    dune \
-    eliom \
-    ocsigenserver \
-    ocsipersist-dbm \
-    js_of_ocaml \
-    js_of_ocaml-ppx \
-    tyxml \
-    lwt \
-    ocamlfind \
-    utop
+      eliom \
+      ocsigenserver \
+      ocsipersist-dbm \
+      js_of_ocaml \
+      js_of_ocaml-lwt \
+      js_of_ocaml-tyxml \
+      tyxml \
+      lwt \
+      ocamlfind
 
-# Copy project files
-COPY --chown=root:root . .
+COPY . .
 
-# Expose port
-EXPOSE 8080
 RUN opam exec -- make all
-# Set up environment and run dev script
+
+EXPOSE 8080
+
 CMD ["opam", "exec", "--", "ocsigenserver", "-c", "/app/h42n42.conf.in", "-v"]
