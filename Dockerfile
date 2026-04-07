@@ -1,42 +1,63 @@
-FROM ocaml/opam:debian-12-ocaml-4.14
+FROM ubuntu:24.04
 
+# Set the working directory
 WORKDIR /app
 
-RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-    m4 \
+# Set environment variables to avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV OPAMYES=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libev-dev \
     pkg-config \
     libgmp-dev \
-    libev-dev \
     libssl-dev \
-    libpcre2-dev \
     zlib1g-dev \
+    rlwrap \
+    bubblewrap \
+    m4 \
     libsqlite3-dev \
-    ca-certificates \
-  && sudo rm -rf /var/lib/apt/lists/*
+    libgdbm-dev \
+    curl \
+    expect \
+    unzip \
+    git \
+    rsync \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN opam init --reinit -y --disable-sandboxing
-RUN opam update
+# Install OPAM non-interactively
+RUN printf "\n" | bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"
 
-RUN opam pin add -y js_of_ocaml 5.8.0
-RUN opam pin add -y js_of_ocaml-compiler 5.8.0
-RUN opam pin add -y js_of_ocaml-lwt 5.8.0
-RUN opam pin add -y js_of_ocaml-tyxml 5.8.0
+# Initialize OPAM
+RUN opam init --yes --disable-sandboxing
 
-RUN opam install -y \
+# Create OCaml switch
+RUN opam switch create ocreet-4.14.1 4.14.1
+
+# Activate OPAM environment and install packages
+RUN eval $(opam env) && \
+    opam install -y \
     dune \
-    lwt \
-    tyxml \
-    js_of_ocaml=5.8.0 \
-    js_of_ocaml-lwt=5.8.0 \
-    js_of_ocaml-tyxml=5.8.0 \
     eliom \
-    ocsigenserver
+    ocsigenserver \
+    ocsipersist-dbm \
+    js_of_ocaml \
+    js_of_ocaml-ppx \
+    tyxml \
+    lwt \
+    ocamlfind \
+    utop
 
-COPY --chown=opam:opam . /app
+# Copy project files
+COPY --chown=root:root . .
 
-RUN opam exec -- make all
-RUN opam exec -- sh -lc 'mkdir -p "$(ocamlfind query ocsigenserver)/var/run"'
+# Make scripts executable
 
+
+# Expose port
 EXPOSE 8080
 
+# Set up environment and run dev script
 CMD ["opam", "exec", "--", "ocsigenserver", "-c", "/app/h42n42.conf.in", "-v"]

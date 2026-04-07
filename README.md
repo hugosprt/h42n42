@@ -1,7 +1,7 @@
 # H42N42
 
 Interactive web simulation where Creets survive a toxic environment and a contagious virus. The client is written in OCaml and compiled to JavaScript with `js_of_ocaml`, then served by `ocsigenserver`.
-
+ ocsigenserver: ocsigen:main: Cannot create the command pipe /root/.opam/ocreet-4.14.1/lib/ocsigenserver/var/run/ocsigenserver_command. I will continue without.: Unix.Unix_error(Unix.ENOENT, "mkfifo", "/root/.opam/ocreet-4.14.1/lib/ocsigenserver/var/run/ocsigenserver_command")
 ## Objectives
 
 - Simulate moving Creets in a rectangular world
