@@ -9,9 +9,9 @@
 
     <host defaulthostname="localhost">
       <site path="/">
-        <eliommodule module="/app/_server/main.cmo" />
-        <eliom />
         <static dir="/app/static" />
+        <eliommodule module="/app/_server/h42n42.cma" />
+        <eliom />
       </site>
     </host>
   </server>

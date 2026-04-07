@@ -97,8 +97,7 @@ let next_id = ref 0
 let speed_factor = ref 1.0
 let game_over = ref false
 
-let now () =
-  (new%js Js.date_now)##getTime /. 1000.
+let now () = Js.date_now () /. 1000.
 
 let get_by_id id =
   Js.Opt.get

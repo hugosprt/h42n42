@@ -1,40 +1,33 @@
-APP_NAME := h42n42
-SRC := src/main.eliom
+NAME := h42n42
+SERVER_LIB := _server/$(NAME).cma
+CLIENT_JS := static/$(NAME).js
 
-SERVER_DIR := _server
-CLIENT_DIR := _client
-
-TYPE_INFO := $(SERVER_DIR)/main.type_mli
-SERVER_MOD := $(SERVER_DIR)/main.cmo
-CLIENT_JS := static/$(APP_NAME).js
-
-COMMON_PACKAGES := \
-	-thread \
-	-package js_of_ocaml \
-	-package js_of_ocaml-lwt \
-	-package js_of_ocaml-tyxml \
+SERVER_FLAGS := -ppx -thread \
+	-package eliom.server \
 	-package lwt \
 	-package tyxml
 
-SERVER_PACKAGES := -package eliom.server
-CLIENT_PACKAGES := -package eliom.client
+CLIENT_FLAGS := -ppx -thread \
+	-package eliom.client \
+	-package js_of_ocaml \
+	-package js_of_ocaml-lwt \
+	-package js_of_ocaml-tyxml \
+	-package js_of_ocaml-ppx \
+	-package lwt \
+	-package tyxml
 
-all: $(SERVER_MOD) $(CLIENT_JS)
+all: $(SERVER_LIB) $(CLIENT_JS)
 
-$(TYPE_INFO): $(SRC)
-	mkdir -p $(SERVER_DIR) $(CLIENT_DIR) static
-	eliomc $(SERVER_PACKAGES) $(COMMON_PACKAGES) -infer $<
+$(SERVER_LIB): src/main.eliom
+	mkdir -p _server _client static
+	eliomc $(SERVER_FLAGS) -a -o $@ $<
 
-$(SERVER_MOD): $(SRC) $(TYPE_INFO)
-	mkdir -p $(SERVER_DIR) $(CLIENT_DIR) static
-	eliomc $(SERVER_PACKAGES) $(COMMON_PACKAGES) -c $<
-
-$(CLIENT_JS): $(SRC) $(TYPE_INFO)
-	mkdir -p $(SERVER_DIR) $(CLIENT_DIR) static
-	js_of_eliom $(CLIENT_PACKAGES) $(COMMON_PACKAGES) -o $@ $<
+$(CLIENT_JS): src/main.eliom
+	mkdir -p _server _client static
+	js_of_eliom $(CLIENT_FLAGS) -o $@ $<
 
 clean:
-	rm -rf $(SERVER_DIR) $(CLIENT_DIR)
+	rm -rf _server _client
 
 fclean: clean
 	rm -f $(CLIENT_JS)

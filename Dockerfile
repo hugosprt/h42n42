@@ -18,12 +18,14 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     zlib1g-dev \
     libsqlite3-dev \
+    unzip \
     libgdbm-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN printf '\n' | sh -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"
+RUN printf "\n" | bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"
 
 RUN opam init --yes --disable-sandboxing
+
 RUN opam switch create ocreet-4.14.1 4.14.1
 
 RUN eval $(opam env --switch=ocreet-4.14.1) && \
