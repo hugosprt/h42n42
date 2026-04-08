@@ -492,4 +492,26 @@ let start () =
   Lwt.async spawn_loop;
   Lwt.async difficulty_loop
 
-let () = start ()
+let report_client_error exn =
+  let message = "CLIENT ERROR: " ^ Printexc.to_string exn in
+  Js_of_ocaml.Firebug.console##error (Js.string message);
+  match Js.Opt.to_option (Dom_html.document##getElementById (Js.string "game-over")) with
+  | Some elt ->
+      elt##.textContent := Js.some (Js.string message);
+      elt##.className := Js.string "visible"
+  | None -> ()
+
+let rec wait_for_dom id =
+  match Js.Opt.to_option (Dom_html.document##getElementById (Js.string id)) with
+  | Some _ -> Lwt.return_unit
+  | None -> Lwt_js.sleep 0.05 >>= fun () -> wait_for_dom id
+
+let () =
+  Lwt.async (fun () ->
+      wait_for_dom "game-area" >>= fun () ->
+      try
+        start ();
+        Lwt.return_unit
+      with exn ->
+        report_client_error exn;
+        Lwt.return_unit)

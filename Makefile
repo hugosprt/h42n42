@@ -9,6 +9,7 @@ SERVER_FLAGS := -ppx -thread \
 
 CLIENT_FLAGS := -ppx -thread \
 	-package eliom.client \
+	-package bigstringaf \
 	-package js_of_ocaml \
 	-package js_of_ocaml-lwt \
 	-package js_of_ocaml-tyxml \
@@ -24,7 +25,7 @@ $(SERVER_LIB): src/main.eliom
 
 $(CLIENT_JS): src/main.eliom
 	mkdir -p _server _client static
-	js_of_eliom $(CLIENT_FLAGS) -o $@ $<
+	js_of_eliom $(CLIENT_FLAGS) -jsopt +bigstringaf/runtime.js -o $@ $<
 
 clean:
 	rm -rf _server _client
